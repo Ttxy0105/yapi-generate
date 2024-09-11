@@ -10,7 +10,7 @@ const app = Vue.createApp({
         new: true,
         vueFunc: true,
         oldHost: 'api',
-        instanceName: 'request'
+        instanceName: 'request',
       },
       module: [],
       apiData: {},
@@ -29,11 +29,11 @@ const app = Vue.createApp({
   },
   mounted() {
     var clipboard = new ClipboardJS('.copyBtn')
-    console.log(clipboard);
+    console.log(clipboard)
     clipboard.on('success', (e) => {
       this.$message({
         message: '复制成功',
-        type: 'success'
+        type: 'success',
       })
       e.clearSelection()
     })
@@ -41,8 +41,8 @@ const app = Vue.createApp({
       console.error('Action:', e.action)
       console.error('Trigger:', e.trigger)
       this.$message({
-        type: "error",
-        message: '复制失败'
+        type: 'error',
+        message: '复制失败',
       })
     })
 
@@ -54,7 +54,7 @@ const app = Vue.createApp({
     }
   },
   beforeMount() {
-    console.log(23424);
+    console.log(23424)
   },
   methods: {
     /**
@@ -66,10 +66,10 @@ const app = Vue.createApp({
       if (/http/.test(value)) {
         this.platform = getPlatform(value)
         this.$notify({
-          type: "success",
+          type: 'success',
           title: '提示',
-          position: "bottom-right",
-          message: `当前api文档平台为 (${this.platform}) `
+          position: 'bottom-right',
+          message: `当前api文档平台为 (${this.platform}) `,
         })
 
         this.loading = true
@@ -78,7 +78,7 @@ const app = Vue.createApp({
           .post('/swagger', { url: value })
           .then(({ data }) => {
             this.loading = false
-            const { tags, basePath,  paths } = data
+            const { tags, basePath, paths } = data
             this.basePath = basePath || ''
             this.module = tags
             this.apiData = paths
@@ -86,18 +86,16 @@ const app = Vue.createApp({
             if (isNotTags(tags, this.apiData)) {
               this.module = [{ name: '全部', description: '全部' }]
             }
-
           })
           .catch((error) => {
-            console.log(error);
+            console.log(error)
             this.loading = false
             this.$notify({
-              type: "error",
+              type: 'error',
               title: '提示',
-              position: "bottom-right",
-              message: `文档数据加载失败了!!! `
+              position: 'bottom-right',
+              message: `文档数据加载失败了!!! `,
             })
-
           })
 
         /**
@@ -112,11 +110,11 @@ const app = Vue.createApp({
 
         /**
          * @description: 获取平台
-         * @param {*} value 
+         * @param {*} value
          * @returns { String }
          */
         function getPlatform(value) {
-          console.log(/openapi/.test(value), value);
+          console.log(/openapi/.test(value), value)
           return /openapi/.test(value) ? 'Apifox' : 'swagger'
         }
       }
@@ -138,6 +136,8 @@ const app = Vue.createApp({
         }
         reset()
 
+        this.apiGenerate = "import request from '@/utils/request'"
+
         for (const key in this.apiData) {
           const target = this.apiData[key]
           const { method, tag } = getTagsAndMethod(target)
@@ -150,16 +150,12 @@ const app = Vue.createApp({
                 key,
                 method,
                 annotation,
-                this.formInline.instanceName,
+                this.formInline.instanceName
               )
             }
 
             if (this.formInline.old) {
-              this.oldApiGenerate += this.generateOldFunction(
-                key,
-                method,
-                annotation,
-              )
+              this.oldApiGenerate += this.generateOldFunction(key, method, annotation)
             }
             const vueannotation = `
             /**
@@ -167,20 +163,13 @@ const app = Vue.createApp({
             *  @return {*}
             */ `
             if (this.formInline.vueFunc) {
-              this.vueFuncGenerate += utils.generateVueFunc(
-                key,
-                method,
-                vueannotation
-              )
+              this.vueFuncGenerate += utils.generateVueFunc(key, method, vueannotation)
             }
           }
-
-
         }
 
         this.apiGenerateHtml = utils.codeToHtml(Window.highlighter, this.apiGenerate)
         this.vueFuncGenerateHtml = utils.codeToHtml(Window.highlighter, this.vueFuncGenerate)
-
 
         /**
          * @description: 获取tags和method
@@ -189,17 +178,16 @@ const app = Vue.createApp({
          */
         function getTagsAndMethod(target) {
           const method = target['get'] ? 'get' : 'post'
-          const tag = target[method].tags
+          const tag = target[method]?.tags || []
           return {
             tag,
-            method
+            method,
           }
         }
 
         function isPass(module, tag) {
           return module === '全部' || tag.includes(module)
         }
-
       } catch (error) {
         console.log(error)
       }
@@ -226,7 +214,6 @@ const app = Vue.createApp({
   * @return {*}
   */ `
       }
-
     },
 
     /**
@@ -255,9 +242,9 @@ const app = Vue.createApp({
       }
       const funcStr = `
             ${annotation}
-            export function ${method}${methodPart.replace(/^\S/, s =>
-        s.toUpperCase()
-      )}(${isUrlParams ? urlParams + ',' : ''} ${paramsType}, other = {}) {
+            export function ${method}${methodPart.replace(/^\S/, (s) => s.toUpperCase())}(${
+        isUrlParams ? urlParams + ',' : ''
+      } ${paramsType}, other = {}) {
                 return request({
                 url:'${url}',
                 method: '${method}',
@@ -279,7 +266,7 @@ const app = Vue.createApp({
       const url = `${this.formInline.oldHost}|${this.basePath}${key}|${method.toUpperCase()}`
       return `
           ${summary}
-          export const ${method}${methodPart.replace(/^\S/, s =>
+          export const ${method}${methodPart.replace(/^\S/, (s) =>
         s.toUpperCase()
       )} = (data) =>  request('${url}',data)`
     },
@@ -298,7 +285,6 @@ const app = Vue.createApp({
         this.tableLoading = false
       }
     },
-
 
     generateTable(row) {
       const properties = row.properties
@@ -353,9 +339,43 @@ const app = Vue.createApp({
     getInterfaceName(key, method) {
       const paths = key.split('/')
       const methodPart = paths.at(-1)
-      return `${method.replace(/^\S/, s => s.toUpperCase())}${methodPart.replace(/^\S/, s => s.toUpperCase())}`
-    }
-  }
+      return `${method.replace(/^\S/, (s) => s.toUpperCase())}${methodPart.replace(/^\S/, (s) => s.toUpperCase())}`
+    },
+    async downloadCode(type, content) {
+      const moduleName = this.formInline.module || 'api'
+      const translatedModuleName = await this.translateWithDeepSeek(moduleName)
+      const fileName = `${translatedModuleName.toLowerCase().replace(/\s+/g, '_')}_${type}.js`
+
+      const blob = new Blob([content], { type: 'text/javascript' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
+    },
+    async translateWithDeepSeek(text) {
+      try {
+        const response = await fetch('/translate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text }),
+        })
+        if (!response.ok) {
+          throw new Error('Translation request failed')
+        }
+        const data = await response.json()
+        return data.translatedText
+      } catch (error) {
+        console.error('Translation error:', error)
+        return text // 如果翻译失败,返回原文
+      }
+    },
+  },
 })
 app.use(ElementPlus)
 app.mount('#app')

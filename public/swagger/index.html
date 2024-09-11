@@ -127,6 +127,9 @@
             <el-card>
               <div slot="header">
                 <el-tag>api 接口</el-tag>
+                <el-button @click="downloadCode('api', apiGenerate)" type="primary" plain size="small" style="float: right; margin-left: 10px;">
+                  下载代码
+                </el-button>
                 <el-button :data-clipboard-text="apiGenerate" type="primary" plain size="small" style="float: right"
                   class="copyBtn">复制所有代码
                 </el-button>
