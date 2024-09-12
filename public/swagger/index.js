@@ -11,6 +11,7 @@ const app = Vue.createApp({
         vueFunc: true,
         oldHost: 'api',
         instanceName: 'request',
+        json: '',
       },
       module: [],
       apiData: {},
@@ -50,13 +51,35 @@ const app = Vue.createApp({
     if (form) {
       delete form.module
       this.formInline = form
-      this.urlInput(this.formInline.url)
+      // this.urlInput(this.formInline.url)
+      this.jsonInput(this.formInline.json)
     }
   },
   beforeMount() {
     console.log(23424)
   },
   methods: {
+    jsonInput(value) {
+      const data = JSON.parse(value)
+      const { tags, basePath, paths } = data
+      this.basePath = basePath || ''
+      this.module = tags
+      this.apiData = paths
+
+      if (isNotTags(tags, this.apiData)) {
+        this.module = [{ name: '全部', description: '全部' }]
+      }
+
+      /**
+       * @description: 判断是否有tags并且有数据
+       * @param {*} tags
+       * @param {*} apiData
+       * @return { Boolean }
+       **/
+      function isNotTags(tags, apiData) {
+        return !tags && Object.keys(apiData).length > 0
+      }
+    },
     /**
      * @description: 用户输入的url
      * @param {*} value
@@ -344,7 +367,7 @@ const app = Vue.createApp({
     async downloadCode(type, content) {
       const moduleName = this.formInline.module || 'api'
       const translatedModuleName = await this.translateWithDeepSeek(moduleName)
-      const fileName = `${translatedModuleName.toLowerCase().replace(/\s+/g, '_')}_${type}.js`
+      const fileName = `${translatedModuleName}.js`
 
       const blob = new Blob([content], { type: 'text/javascript' })
       const url = URL.createObjectURL(blob)
@@ -357,19 +380,41 @@ const app = Vue.createApp({
       URL.revokeObjectURL(url)
     },
     async translateWithDeepSeek(text) {
+      const DEEPSEEK_API_KEY = '' // 注意: 在前端暴露 API 密钥存在安全风险
+      const API_URL = 'https://api.deepseek.com/v1/chat/completions'
+
       try {
-        const response = await fetch('/translate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
+        const response = await axios.post(
+          API_URL,
+          {
+            model: 'deepseek-chat',
+            messages: [
+              {
+                role: 'system',
+                content:
+                  'You are a translator specializing in programming terminology. Translate the given Chinese text to English, ensuring the result is suitable for use in programming contexts. Use camelCase for multi-word terms, avoid spaces, and keep it concise. Only provide the translation, no explanations.',
+              },
+              {
+                role: 'user',
+                content: `Translate the following Chinese text to English, making it suitable for use as a programming variable or function name: "${text}"`,
+              },
+            ],
           },
-          body: JSON.stringify({ text }),
-        })
-        if (!response.ok) {
-          throw new Error('Translation request failed')
-        }
-        const data = await response.json()
-        return data.translatedText
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
+            },
+          }
+        )
+
+        let translatedText = response.data.choices[0].message.content.trim()
+
+        // 确保结果是驼峰命名法
+        translatedText = translatedText.replace(/\s+/g, '')
+        translatedText = translatedText.charAt(0).toLowerCase() + translatedText.slice(1)
+
+        return translatedText
       } catch (error) {
         console.error('Translation error:', error)
         return text // 如果翻译失败,返回原文

@@ -24,16 +24,16 @@ app.use('/users', usersRouter)
 app.use('/swagger', swaggerUi)
 app.use('/yapi', yapi)
 app.use('/openai', openai)
-app.post('/translate', async (req, res) => {
-  const { text } = req.body
-  try {
-    const translatedText = await translateText(text)
-    res.json({ translatedText })
-  } catch (error) {
-    console.error('Translation error:', error)
-    res.status(500).json({ error: 'Translation failed' })
-  }
-})
+// app.post('/translate', async (req, res) => {
+//   const { text } = req.body
+//   try {
+//     const translatedText = await translateText(text)
+//     res.json({ translatedText })
+//   } catch (error) {
+//     console.error('Translation error:', error)
+//     res.status(500).json({ error: 'Translation failed' })
+//   }
+// })
 
 // app.set('view engine', 'jade') // 或者您使用的其他模板引擎
 // app.set('views', path.join(__dirname, 'views'))

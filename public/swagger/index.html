@@ -7,181 +7,210 @@
 -->
 <!DOCTYPE html>
 <html>
+  <head>
+    <style>
+      html,
+      body,
+      #app {
+        height: 100%;
+      }
 
-<head>
-  <style>
-    html,
-    body,
-    #app {
-      height: 100%;
-    }
+      body {
+        overflow-y: auto;
+      }
 
-    body {
-      overflow-y: auto;
-    }
+      * {
+        margin: 0;
+        padding: 0;
+      }
 
-    * {
-      margin: 0;
-      padding: 0;
-    }
+      .form-card {
+        position: sticky;
+        top: 0;
+        z-index: 9;
+      }
 
-    .form-card {
-      position: sticky;
-      top: 0;
-      z-index: 9;
-    }
+      .clearfix:before,
+      .clearfix:after {
+        display: table;
+        content: '';
+      }
 
-    .clearfix:before,
-    .clearfix:after {
-      display: table;
-      content: '';
-    }
+      .clearfix:after {
+        clear: both;
+      }
 
-    .clearfix:after {
-      clear: both;
-    }
+      .form-card .el-form-item {
+        margin-bottom: 0;
+      }
 
-    .form-card .el-form-item {
-      margin-bottom: 0;
-    }
-
-    .box-card {
-      margin-top: 20px;
-    }
-  </style>
-  <meta charset="UTF-8" />
-  <!-- import CSS -->
-  <!-- <link
+      .box-card {
+        margin-top: 20px;
+      }
+    </style>
+    <meta charset="UTF-8" />
+    <!-- import CSS -->
+    <!-- <link
       rel="stylesheet"
       href="https://unpkg.com/ElementPlus-ui/lib/theme-chalk/index.css"
     /> -->
-  <link href="https://cdn.jsdelivr.net/npm/element-plus@2.2.0/dist/index.css" rel="stylesheet" />
-</head>
+    <link href="https://cdn.jsdelivr.net/npm/element-plus@2.2.0/dist/index.css" rel="stylesheet" />
+  </head>
 
-<body>
+  <body>
+    <div id="app">
+      <div
+        v-loading="loading"
+        element-loading-background="rgba(122, 122, 122, 0.8)"
+        element-loading-text="Loading..."
+        style="height: 100%"
+      >
+        <div style="position: fixed; right: 0; top: 0; z-index: 100">
+          <mark style="margin-left: 20px">兼容swagger, apifox</mark>
+        </div>
 
-  <div id="app">
+        <el-card class="form-card" shadow="never">
+          <el-form :inline="true" :model="formInline" class="demo-form-inline" label-width="180">
+            <el-row>
+              <el-col :xs="24" :sm="12" :md="8" :xl="4">
+                <el-form-item label="文档接口">
+                  <!-- <el-input v-model="formInline.url" placeholder="文档接口,不需要swagger.html路径" @change="urlInput"></el-input> -->
 
-    <div v-loading="loading" element-loading-background="rgba(122, 122, 122, 0.8)" element-loading-text="Loading..."
-      style="height: 100%;">
-      <div style="position: fixed;right: 0; top: 0; z-index: 100;">
-        <mark style="margin-left: 20px;">兼容swagger, apifox</mark>
-      </div>
+                  <el-input
+                    v-model="formInline.json"
+                    placeholder="文档接口,不需要swagger.html路径"
+                    type="textarea"
+                    @change="jsonInput"
+                  ></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :sm="12" :md="8" :xl="4">
+                <el-form-item label="接口模块">
+                  <el-select v-model="formInline.module" placeholder="接口模块" @change="selectModule">
+                    <el-option
+                      :label="item.ame"
+                      :value="item.name"
+                      v-for="(item,index) in module"
+                      :key="index"
+                    ></el-option>
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :sm="12" :md="8" :xl="4">
+                <el-form-item label="自定义实例名称:">
+                  <el-input v-model="formInline.instanceName" placeholder="Please input" style="width: 100%"></el-input>
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :sm="12" :md="8" :xl="4">
+                <el-form-item label="是否生成vue内部函数:">
+                  <el-switch v-model="formInline.vueFunc"></el-switch>
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :sm="12" :md="8" :xl="4">
+                <el-form-item label="是否生成新版api:">
+                  <el-switch v-model="formInline.new"></el-switch>
+                </el-form-item>
+              </el-col>
+              <el-col :xs="24" :sm="12" :md="8" :xl="4">
+                <el-form-item label="是否生成公司内部api:">
+                  <el-switch v-model="formInline.old"></el-switch>
+                </el-form-item>
+              </el-col>
+            </el-row>
 
-      <el-card class="form-card" shadow="never">
-        <el-form :inline="true" :model="formInline" class="demo-form-inline" label-width="180">
-          <el-row>
-            <el-col :xs="24" :sm="12" :md="8" :xl="4">
-              <el-form-item label="文档接口">
-                <el-input v-model="formInline.url" placeholder="文档接口,不需要swagger.html路径" @change="urlInput"></el-input>
+            <div style="margin-top: 16px">
+              <el-form-item label="baseHost(内部用)">
+                <el-input v-model="formInline.oldHost" placeholder="Please input" style="width: 100%"></el-input>
               </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :xl="4">
-              <el-form-item label="接口模块">
-                <el-select v-model="formInline.module" placeholder="接口模块" @change="selectModule">
-                  <el-option :label="item.ame" :value="item.name" v-for="(item,index) in module"
-                    :key="index"></el-option>
-                </el-select>
+              <el-form-item>
+                <el-link target="_blank" href="https://github.com/Journey98/yapi-generate" type="primary">
+                  github仓库
+                </el-link>
               </el-form-item>
+            </div>
+          </el-form>
+        </el-card>
+        <el-card class="box-card" shadow="never">
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-card>
+                <div slot="header">
+                  <el-tag>api 接口</el-tag>
+                  <el-button
+                    @click="downloadCode('api', apiGenerate)"
+                    type="primary"
+                    plain
+                    size="small"
+                    style="float: right; margin-left: 10px"
+                  >
+                    下载代码
+                  </el-button>
+                  <el-button
+                    :data-clipboard-text="apiGenerate"
+                    type="primary"
+                    plain
+                    size="small"
+                    style="float: right"
+                    class="copyBtn"
+                  >
+                    复制所有代码
+                  </el-button>
+                </div>
+                <pre v-html="apiGenerateHtml" style="margin-top: 16px"></pre>
+              </el-card>
             </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :xl="4">
-              <el-form-item label="自定义实例名称:">
-                <el-input v-model="formInline.instanceName" placeholder="Please input" style="width: 100%;"></el-input>
-              </el-form-item>
+            <el-col :span="12">
+              <el-card>
+                <div slot="header">
+                  <el-tag>vue 内部函数</el-tag>
+                  <el-button
+                    :data-clipboard-text="vueFuncGenerate"
+                    type="primary"
+                    plain
+                    size="small"
+                    style="float: right"
+                    class="copyBtn"
+                  >
+                    复制所有代码
+                  </el-button>
+                </div>
+                <pre v-html="vueFuncGenerateHtml" style="margin-top: 16px"></pre>
+              </el-card>
             </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :xl="4">
-              <el-form-item label="是否生成vue内部函数:">
-                <el-switch v-model="formInline.vueFunc"></el-switch>
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :xl="4">
-              <el-form-item label="是否生成新版api:">
-                <el-switch v-model="formInline.new"></el-switch>
-              </el-form-item>
-            </el-col>
-            <el-col :xs="24" :sm="12" :md="8" :xl="4">
-              <el-form-item label="是否生成公司内部api:">
-                <el-switch v-model="formInline.old"></el-switch>
-              </el-form-item>
-            </el-col>
-
           </el-row>
-
-          <div style="margin-top: 16px;">
-            <el-form-item label="baseHost(内部用)">
-              <el-input v-model="formInline.oldHost" placeholder="Please input" style="width: 100%;"></el-input>
-            </el-form-item>
-            <el-form-item>
-              <el-link target="_blank" href="https://github.com/Journey98/yapi-generate" type="primary">
-                github仓库
-              </el-link>
-            </el-form-item>
-          </div>
-
-        </el-form>
-
-      </el-card>
-      <el-card class="box-card" shadow="never">
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-card>
-              <div slot="header">
-                <el-tag>api 接口</el-tag>
-                <el-button @click="downloadCode('api', apiGenerate)" type="primary" plain size="small" style="float: right; margin-left: 10px;">
-                  下载代码
-                </el-button>
-                <el-button :data-clipboard-text="apiGenerate" type="primary" plain size="small" style="float: right"
-                  class="copyBtn">复制所有代码
-                </el-button>
-              </div>
-              <pre v-html="apiGenerateHtml" style="margin-top: 16px;"></pre>
-            </el-card>
-          </el-col>
-          <el-col :span="12">
-            <el-card>
-              <div slot="header">
-                <el-tag>vue 内部函数</el-tag>
-                <el-button :data-clipboard-text="vueFuncGenerate" type="primary" plain size="small" style="float: right"
-                  class="copyBtn">复制所有代码
-                </el-button>
-              </div>
-              <pre v-html="vueFuncGenerateHtml" style="margin-top: 16px;"></pre>
-            </el-card>
-          </el-col>
-        </el-row>
-      </el-card>
-      <el-card class="box-card" shadow="never">
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-card>
-              <div slot="header">
-                <el-tag>公司内部api</el-tag>
-                <el-button :data-clipboard-text="oldApiGenerate" type="primary" plain size="small" style="float: right"
-                  class="copyBtn">复制所有代码
-                </el-button>
-              </div>
-              <pre v-html="oldApiGenerate"></pre>
-            </el-card>
-
-          </el-col>
-          <el-col :span="12">
-
-          </el-col>
-        </el-row>
-      </el-card>
+        </el-card>
+        <el-card class="box-card" shadow="never">
+          <el-row :gutter="20">
+            <el-col :span="12">
+              <el-card>
+                <div slot="header">
+                  <el-tag>公司内部api</el-tag>
+                  <el-button
+                    :data-clipboard-text="oldApiGenerate"
+                    type="primary"
+                    plain
+                    size="small"
+                    style="float: right"
+                    class="copyBtn"
+                  >
+                    复制所有代码
+                  </el-button>
+                </div>
+                <pre v-html="oldApiGenerate"></pre>
+              </el-card>
+            </el-col>
+            <el-col :span="12"></el-col>
+          </el-row>
+        </el-card>
+      </div>
     </div>
-
-
-  </div>
-</body>
-<script src="../javascripts/vue.global.js"></script>
-<script src="../javascripts/index.full.min.js"></script>
-<script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.min.js"></script>
-<script src="https://cdn.bootcdn.net/ajax/libs/clipboard.js/2.0.8/clipboard.min.js"></script>
-<script src="../javascripts/shiki.js"></script>
-<script src="./lib/shiki.js"></script>
-<script src="./lib/index.js"></script>
-<script src="./index.js"></script>
-
-
+  </body>
+  <script src="../javascripts/vue.global.js"></script>
+  <script src="../javascripts/index.full.min.js"></script>
+  <script src="https://cdn.bootcdn.net/ajax/libs/axios/0.21.1/axios.min.js"></script>
+  <script src="https://cdn.bootcdn.net/ajax/libs/clipboard.js/2.0.8/clipboard.min.js"></script>
+  <script src="../javascripts/shiki.js"></script>
+  <script src="./lib/shiki.js"></script>
+  <script src="./lib/index.js"></script>
+  <script src="./index.js"></script>
 </html>
